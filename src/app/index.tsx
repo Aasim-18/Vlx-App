@@ -19,6 +19,10 @@ export default function MainScreen() {
   if (!isSignedIn) {
     return <AuthView mode="signInOrUp" />
   }
+ 
+   // debug
+   console.log('User:', user);
+   
 
   return (
     <View style={styles.container}>

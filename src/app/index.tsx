@@ -1,5 +1,5 @@
 import { Update } from '@/services/AuthService'
-import { useAuth } from '@clerk/expo'
+import { useAuth, useUser } from '@clerk/expo'
 import { AuthView } from '@clerk/expo/native'
 import { useState } from 'react'
 import { ActivityIndicator, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native'
@@ -8,7 +8,8 @@ import { ActivityIndicator, StyleSheet, Text, TextInput, TouchableOpacity, View 
   
 
 export default function MainScreen() {
-  const { isSignedIn, isLoaded } = useAuth({ treatPendingAsSignedOut: false })
+  const { isSignedIn, isLoaded, getToken } = useAuth({ treatPendingAsSignedOut: false })
+  const { user } = useUser()
   const [mobile, setMobile] = useState('')
   const [name, setName] = useState('')
   const [batch, setBatch] = useState('')
@@ -21,6 +22,7 @@ export default function MainScreen() {
       </View>
     )
   }
+  
 
   if (!isSignedIn) {
     return <AuthView mode="signInOrUp" />
@@ -35,7 +37,8 @@ export default function MainScreen() {
 
     setIsSaving(true)
     try {
-      await Update({ mobile, name, batch })
+      const token = await getToken()
+      await Update({ mobile, name, batch }, token)
     } catch (error) {
       console.error('Error updating user:', error)
     } finally {
@@ -43,6 +46,8 @@ export default function MainScreen() {
     }
   }
 
+  // debug
+  console.log("User from Clerk:", user)
 
 
    

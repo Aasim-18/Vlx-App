@@ -1,5 +1,5 @@
 import { Update } from '@/services/AuthService'
-import { useAuth, useUser } from '@clerk/expo'
+import { useAuth, useUser, useClerk } from '@clerk/expo'
 import { AuthView } from '@clerk/expo/native'
 import { useState } from 'react'
 import { ActivityIndicator, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native'
@@ -9,7 +9,8 @@ import { ActivityIndicator, StyleSheet, Text, TextInput, TouchableOpacity, View 
 
 export default function MainScreen() {
   const { isSignedIn, isLoaded, getToken } = useAuth({ treatPendingAsSignedOut: false })
-  const { user } = useUser()
+  const { user } = useUser();
+  const { signOut } = useClerk();
   const [mobile, setMobile] = useState('')
   const [name, setName] = useState('')
   const [batch, setBatch] = useState('')
@@ -93,6 +94,12 @@ export default function MainScreen() {
         >
           <Text style={styles.linkButtonText}>{isSaving ? 'Saving...' : 'Save'}</Text>
         </TouchableOpacity>
+         <TouchableOpacity
+        style={[styles.linkButton, { backgroundColor: '#666' }]}
+        onPress={() => signOut()}
+      >
+        <Text style={styles.linkButtonText}>Sign Out</Text>
+      </TouchableOpacity>
       </View>
     </View>
   )

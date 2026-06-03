@@ -1,12 +1,18 @@
-import { useAuth, useUser, useClerk, useUserProfileModal } from '@clerk/expo'
-import { AuthView, UserButton } from '@clerk/expo/native'
-import { Text, View, StyleSheet, Image, TouchableOpacity, ActivityIndicator } from 'react-native'
+import { Update } from '@/services/AuthService'
+import { useAuth } from '@clerk/expo'
+import { AuthView } from '@clerk/expo/native'
+import { useState } from 'react'
+import { ActivityIndicator, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native'
+
+
+  
 
 export default function MainScreen() {
   const { isSignedIn, isLoaded } = useAuth({ treatPendingAsSignedOut: false })
-  const { user } = useUser()
-  const { signOut } = useClerk()
-  const { presentUserProfile } = useUserProfileModal()
+  const [mobile, setMobile] = useState('')
+  const [name, setName] = useState('')
+  const [batch, setBatch] = useState('')
+  const [isSaving, setIsSaving] = useState(false)
 
   if (!isLoaded) {
     return (
@@ -20,33 +26,69 @@ export default function MainScreen() {
     return <AuthView mode="signInOrUp" />
   }
  
-   // debug
-   console.log('User:', user);
+  const isFormValid = name.trim().length > 0 && mobile.trim().length > 0 && batch.trim().length > 0
+
+  const handleUpdateUser = async () => {
+    if (!isFormValid || isSaving) {
+      return
+    }
+
+    setIsSaving(true)
+    try {
+      await Update({ mobile, name, batch })
+    } catch (error) {
+      console.error('Error updating user:', error)
+    } finally {
+      setIsSaving(false)
+    }
+  }
+
+
+
+   
    
 
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.title}>Welcome</Text>
-        <View style={{ width: 44, height: 44, borderRadius: 22, overflow: 'hidden' }}>
-          <UserButton />
-        </View>
+        <Text style={styles.title}>Complete Profile</Text>
       </View>
-      <View style={styles.profileCard}>
-        {user?.imageUrl && <Image source={{ uri: user.imageUrl }} style={styles.avatar} />}
-        <View>
-          <Text>Hello {user?.id}</Text>
-        </View>
+      <View style={styles.form}>
+        <Text style={styles.label}>Name</Text>
+        <TextInput
+          style={styles.input}
+          value={name}
+          onChangeText={setName}
+          placeholder="Your name"
+          autoCapitalize="words"
+          returnKeyType="next"
+        />
+        <Text style={styles.label}>Mobile</Text>
+        <TextInput
+          style={styles.input}
+          value={mobile}
+          onChangeText={setMobile}
+          placeholder="Mobile number"
+          keyboardType="phone-pad"
+          returnKeyType="next"
+        />
+        <Text style={styles.label}>Batch</Text>
+        <TextInput
+          style={styles.input}
+          value={batch}
+          onChangeText={setBatch}
+          placeholder="Batch"
+          autoCapitalize="characters"
+          returnKeyType="done"
+        />
+        <TouchableOpacity
+          style={[styles.linkButton, (!isFormValid || isSaving) && styles.linkButtonDisabled]}
+          onPress={handleUpdateUser}
+          disabled={!isFormValid || isSaving}
+        >
+          <Text style={styles.linkButtonText}>{isSaving ? 'Saving...' : 'Save'}</Text>
+        </TouchableOpacity>
       </View>
-      <TouchableOpacity style={styles.linkButton} onPress={presentUserProfile}>
-        <Text style={styles.linkButtonText}>Manage Profile</Text>
-      </TouchableOpacity>
-      <TouchableOpacity
-        style={[styles.linkButton, { backgroundColor: '#666' }]}
-        onPress={() => signOut()}
-      >
-        <Text style={styles.linkButtonText}>Sign Out</Text>
-      </TouchableOpacity>
     </View>
   )
 }
@@ -70,6 +112,23 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+  },
+  form: {
+    gap: 12,
+  },
+  label: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#222',
+  },
+  input: {
+    borderWidth: 1,
+    borderColor: '#ddd',
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    fontSize: 16,
+    backgroundColor: '#fff',
   },
   title: {
     fontSize: 28,
@@ -101,6 +160,9 @@ const styles = StyleSheet.create({
     padding: 16,
     borderRadius: 12,
     alignItems: 'center',
+  },
+  linkButtonDisabled: {
+    opacity: 0.6,
   },
   linkButtonText: {
     color: '#fff',
